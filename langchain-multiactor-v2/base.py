@@ -13,7 +13,7 @@ class CodeInterpreterAgent:
         self,
         name: str,
         instructions: str,
-        model: str = "gpt-4",  # Use your Azure deployment name
+        model: str = "a1sandboxcp4o",  # Azure deployment name
         temperature: float = 0.7,
         tools: Optional[List[Dict[str, str]]] = None,
         files: Optional[List[str]] = None,

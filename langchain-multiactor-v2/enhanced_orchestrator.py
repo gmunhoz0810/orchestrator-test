@@ -57,7 +57,7 @@ class EnhancedOrchestrator:
             - Keep plans minimal but complete
             - Ensure each actor has necessary context
             - Consider previous results when planning""",
-            model="gpt-4"  # Use your Azure deployment name
+            model="a1sandboxcp4o"  # Azure deployment name
         )
         
         if verbose:

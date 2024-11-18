@@ -8,20 +8,22 @@ def main():
     # Load environment
     load_dotenv()
     
-    # Initialize orchestrator
-    orchestrator = EnhancedOrchestrator(api_key=os.getenv('OPENAI_API_KEY'))
+    # Initialize orchestrator (no API key needed, it's handled in azure_config)
+    orchestrator = EnhancedOrchestrator(verbose=True)
     
     # Create and register actors
     customer_agent = CodeInterpreterAgent(
         name=CUSTOMER_ACTOR_METADATA.name,
         instructions=CUSTOMER_ACTOR_METADATA.system_prompt,
-        files=[CUSTOMER_ACTOR_METADATA.file_path]
+        files=[CUSTOMER_ACTOR_METADATA.file_path],
+        model="a1sandboxcp4o"  # Azure deployment name
     )
-    
+
     org_agent = CodeInterpreterAgent(
         name=ORGANIZATION_ACTOR_METADATA.name,
         instructions=ORGANIZATION_ACTOR_METADATA.system_prompt,
-        files=[ORGANIZATION_ACTOR_METADATA.file_path]
+        files=[ORGANIZATION_ACTOR_METADATA.file_path],
+        model="a1sandboxcp4o"  # Azure deployment name
     )
     
     # Register actors
