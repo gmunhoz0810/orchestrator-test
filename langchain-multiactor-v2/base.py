@@ -42,23 +42,6 @@ class CodeInterpreterAgent:
             print(f"Tools: {self.tools}")
             print(f"Number of files: {len(self.files)}")
 
-    def _create_file_instructions(self) -> str:
-        """Create instructions about file mappings."""
-        if not self.file_mapping:
-            return ""
-            
-        file_info = "\n".join([
-            f"- File ID '{file_id}' is '{info['filename']}'"
-            for file_id, info in self.file_mapping.items()
-        ])
-        
-        return f"""
-IMPORTANT - File name mapping information:
-When working with files, please note the following filename mappings:
-{file_info}
-
-When reading files in your code, use the File IDs, but refer to the original filenames in your communications.
-"""
     
     def initialize(self) -> None:
         """Initialize the Azure OpenAI assistant"""
@@ -76,13 +59,26 @@ When reading files in your code, use the File IDs, but refer to the original fil
         
         try:
             # Create the assistant using Azure OpenAI
-            assistant = self.client.beta.assistants.create(
-                name=self.name,
-                instructions=enhanced_instructions,
-                tools=self.tools,
-                model=self.model,
-                file_ids=file_ids
-            )
+            creation_params = {
+                "name": self.name,
+                "instructions": enhanced_instructions,
+                "tools": self.tools,
+                "model": self.model,
+            }
+            
+            # Only add tool_resources if we have files
+            if file_ids:
+                creation_params["tool_resources"] = {
+                    "code_interpreter": {
+                        "file_ids": file_ids
+                    }
+                }
+            
+            if self.verbose:
+                print("\nCreation parameters:")
+                print(creation_params)
+                
+            assistant = self.client.beta.assistants.create(**creation_params)
             self.assistant_id = assistant.id
             
             if self.verbose:
