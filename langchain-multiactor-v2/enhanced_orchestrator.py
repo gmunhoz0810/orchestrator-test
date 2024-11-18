@@ -195,22 +195,31 @@ Requirements:
                 results[actor_name] = result["content"]
                 self.log(f"Completed {actor_name}")
             
-            # Create final synthesis prompt
-            synthesis_prompt = f"""Query: {query}
+            # Build Actor Results section
+            actor_results = "\n".join(
+                f"From {name}:\n{content}\n" 
+                for name, content in results.items()
+            )
+            
+            # Build Previous Context Available section
+            previous_context = "\n".join(
+                f"- {actor}: {len(history)} previous results"
+                for actor, history in self.context.actor_results.items()
+            )
+            
+            # Create synthesis prompt with proper string formatting
+            synthesis_prompt = (
+                f"Query: {query}\n\n"
+                f"Actor Results:\n{actor_results}\n\n"
+                f"Previous Context Available:\n{previous_context}\n\n"
+                "Create a final answer that:\n"
+                "1. Directly addresses the query\n"
+                "2. Integrates all actor insights\n"
+                "3. Maintains continuity with previous analysis\n"
+                "4. Is clear and concise"
+            )
 
-Actor Results:
-{chr(10).join(f'From {name}:\n{content}\n' for name, content in results.items())}
-
-Previous Context Available:
-{chr(10).join(f'- {actor}: {len(history)} previous results' for actor, history in self.context.actor_results.items())}
-
-Create a final answer that:
-1. Directly addresses the query
-2. Integrates all actor insights
-3. Maintains continuity with previous analysis
-4. Is clear and concise"""
-
-            # Use planner for final synthesis
+            # Use planner for synthesis
             synthesis = self.planner.run_analysis(synthesis_prompt)
             execution_time = time.time() - start_time
             
