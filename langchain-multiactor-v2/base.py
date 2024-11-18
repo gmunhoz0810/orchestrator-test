@@ -41,6 +41,24 @@ class CodeInterpreterAgent:
             print(f"Temperature: {self.temperature}")
             print(f"Tools: {self.tools}")
             print(f"Number of files: {len(self.files)}")
+
+    def _create_file_instructions(self) -> str:
+        """Create instructions about file mappings."""
+        if not self.file_mapping:
+            return ""
+            
+        file_info = "\n".join([
+            f"- File ID '{file_id}' is '{info['filename']}'"
+            for file_id, info in self.file_mapping.items()
+        ])
+        
+        return f"""
+IMPORTANT - File name mapping information:
+When working with files, please note the following filename mappings:
+{file_info}
+
+When reading files in your code, use the File IDs, but refer to the original filenames in your communications.
+"""
     
     def initialize(self) -> None:
         """Initialize the Azure OpenAI assistant"""
