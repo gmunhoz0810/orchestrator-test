@@ -6,7 +6,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END, START
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.output_parsers.openai_functions import JsonOutputFunctionsParser
-import openai
+from openai import AzureOpenAI
 from datetime import datetime
 import json
 import os
@@ -17,19 +17,25 @@ import time
 # Load environment variables from .env file
 load_dotenv()
 
-# Get OpenAI API key from environment
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-if not OPENAI_API_KEY:
-    print("Error: OPENAI_API_KEY not found in .env file")
+# Get Azure OpenAI credentials from environment
+AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY")
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+
+if not AZURE_OPENAI_KEY or not AZURE_OPENAI_ENDPOINT:
+    print("Error: Azure OpenAI credentials not found in .env file")
     sys.exit(1)
 
-# Initialize OpenAI client with API key
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+# Initialize Azure OpenAI client
+client = AzureOpenAI(
+    api_key=AZURE_OPENAI_KEY,
+    api_version="2024-02-15-preview",
+    azure_endpoint=AZURE_OPENAI_ENDPOINT
+)
 
-print(f"[{datetime.now()}] 🔑 Successfully loaded OpenAI API key")
+print(f"[{datetime.now()}] 🔑 Successfully loaded Azure OpenAI credentials")
 
 def create_assistant_with_file(name: str, instructions: str, file_path: str) -> Dict:
-    """Create an OpenAI assistant with code interpreter and file access."""
+    """Create an Azure OpenAI assistant with code interpreter and file access."""
     print(f"\n[{datetime.now()}] Creating assistant: {name}")
     
     # Upload file
@@ -39,31 +45,30 @@ def create_assistant_with_file(name: str, instructions: str, file_path: str) -> 
     )
     print(f"[{datetime.now()}] Uploaded file: {file_path} (ID: {file.id})")
     
-    # Create assistant with file
+    # Create assistant with code interpreter and file access
     assistant = client.beta.assistants.create(
         name=name,
         instructions=instructions,
-        model="gpt-4",
+        model="gpt-4",  # Use your Azure OpenAI deployment name
         tools=[{"type": "code_interpreter"}],
         tool_resources={
             "code_interpreter": {
-            "file_ids": [file.id]
+                "file_ids": [file.id]
             }
         }
     )
     print(f"[{datetime.now()}] Created assistant: {name} (ID: {assistant.id})")
     return {"assistant_id": assistant.id, "file_id": file.id}
 
-
 def create_thread_and_run(assistant_id: str, file_id: str, user_message: str) -> Dict:
     """Create a thread and run for an assistant, returning the results."""
     print(f"\n[{datetime.now()}] Creating thread for assistant: {assistant_id}")
     
-    # First create an empty thread
+    # Create thread
     thread = client.beta.threads.create()
-    print(f"[{datetime.now()}] Created empty thread: {thread.id}")
+    print(f"[{datetime.now()}] Created thread: {thread.id}")
     
-    # Add message (no need to attach file as it's already attached to assistant)
+    # Add message to thread
     message = client.beta.threads.messages.create(
         thread_id=thread.id,
         role="user",
